@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Producción TV - Voice Chat</title>
+    <style>
+        :root { --bg-color: #36393f; --container-bg: #2f3136; --primary: #5865F2; --primary-hover: #4752C4; --danger: #ed4245; --danger-hover: #c03537; --text-color: #ffffff; --text-muted: #b9bbbe; --input-bg: #202225; --success: #43b581; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at top right, #2a2c31, transparent); }
+        h1 { font-size: 28px; margin-bottom: 8px; font-weight: 800; }
+        .glass-panel { background: rgba(47, 49, 54, 0.95); backdrop-filter: blur(10px); border-radius: 12px; padding: 40px; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .status { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; height: 20px; }
+        .status.connected { color: var(--success); font-weight: 600; }
+
+        #joinView, #roleView, #channelView { transition: opacity 0.3s ease; }
+        #roleView, #channelView { display: none; flex-direction: column; align-items: center; }
+
+        input[type=text] { width: 100%; padding: 14px 16px; background-color: var(--input-bg); border: none; border-radius: 6px; color: var(--text-color); font-size: 16px; margin-bottom: 15px; outline: none; }
+        input[type=text]:focus { box-shadow: 0 0 0 2px var(--primary); }
+        button { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        button:hover { background-color: var(--primary-hover); }
+        button.danger { background-color: var(--danger); margin-top: 20px; }
+        button.danger:hover { background-color: var(--danger-hover); }
+        
+        .role-btn { background-color: #2f3136; border: 1px solid #4f545c; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; margin-bottom: 5px; }
+        .role-btn:hover { background-color: #4f545c; }
+        
+        .mode-btn { background-color: #2f3136; border: 2px solid #2f3136; padding: 10px; margin: 0; flex: 1; }
+        .mode-btn.active { border-color: var(--primary); }
+
+        .ptt-container { width: 100%; margin-top: 20px; border: 2px dashed #4f545c; padding: 20px; border-radius: 8px; user-select: none; }
+        .ptt-container.active { background-color: rgba(88, 101, 242, 0.2); border-color: var(--primary); }
+        
+        .users-grid { display: flex; width: 100%; justify-content: space-around; margin-top: 10px; }
+        .user-card { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { width: 90px; height: 90px; background-color: #2f3136; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; margin-bottom: 12px; border: 3px solid transparent; transition: 0.1s; }
+        .avatar.speaking { border-color: var(--success); box-shadow: 0 0 15px rgba(67, 181, 129, 0.5); }
+        
+        .role-badge { background-color: var(--input-bg); color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-bottom: 6px; }
+        .user-name { font-size: 18px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .room-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #b9bbbe; }
+        
+        /* Volume Slider styling */
+        input[type=range] { -webkit-appearance: none; width: 80%; background: transparent; height: 6px; border-radius: 3px; background: #4f545c; outline: none; padding: 0; margin-top: 10px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+        <h1>Producción TV</h1>
+        <div id="statusText" class="status">Desconectado</div>
+
+        <!-- Vista para Unirse -->
+        <div id="joinView">
+            <input type="text" id="usernameInput" placeholder="Tu Nombre de Usuario" autocomplete="off">
+            <br/><br/>
+            <h3 style="color: #b9bbbe; font-size: 14px; margin-bottom: 10px; text-align: left; text-transform: uppercase;">Salas Activas</h3>
+            <div id="activeChannelsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom: 20px;">
+                 <div style="color: #72767d; font-style: italic; font-size: 14px;">Cargando salas...</div>
+            </div>
+            
+            <h3 style="color: #b9bbbe; font-size: 14px; margin-bottom: 10px; text-align: left; text-transform: uppercase;">O crea una nueva</h3>
+            <input type="text" id="channelInput" placeholder="Nombre de la nueva sala" autocomplete="off">
+            <button onclick="goToRoleSelection()">Crear o Unirse al Canal</button>
+        </div>
+
+        <!-- Vista de Roles -->
+        <div id="roleView">
+            <h3 style="color: #b9bbbe; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; text-align: left;">Modo de Transmisión</h3>
+            <div style="display:flex; justify-content:center; gap:10px; margin-bottom: 20px;">
+                <button id="btnModeOpen" class="mode-btn active" onclick="setVoiceMode('OPEN')">🎙️ Abierto</button>
+                <button id="btnModePTT" class="mode-btn" onclick="setVoiceMode('PTT')">👆 Tecla/PTT</button>
+            </div>
+
+            <h3 style="color: #b9bbbe; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; text-align: left;">Tu Rol en #<span id="roleViewRoom"></span></h3>
+            <button class="role-btn" onclick="connectToRoom('Director', '🎬')">🎬 Director</button>
+            <button class="role-btn" onclick="connectToRoom('Cámaras', '🎥')">🎥 Cámaras</button>
+            <button class="role-btn" onclick="connectToRoom('Juego', '🎮')">🎮 Juego</button>
+            <button class="role-btn" onclick="connectToRoom('Entrevistas', '🎤')">🎤 Entrevistas</button>
+            <button class="danger" onclick="cancelJoin()">Volver</button>
+        </div>
+
+        <!-- Vista de Canal Activo -->
+        <div id="channelView">
+            <div class="room-title" id="activeChannelName">...</div>
+            
+            <div class="users-grid">
+                <div class="user-card">
+                    <div class="avatar" id="localAvatar">?</div>
+                    <div class="role-badge" id="localRoleBadge">Rol</div>
+                    <div class="user-name" id="localNameLabel">Tú</div>
+                </div>
+                <!-- Remote User Con Slider y Badge -->
+                <div class="user-card" id="remoteCard" style="display:none;">
+                    <div class="avatar" id="remoteAvatar">?</div>
+                    <div class="role-badge" id="remoteRoleBadge" style="display:none;">Rol</div>
+                    <div class="user-name" id="remoteNameLabel">Esperando...</div>
+                    <span style="font-size: 11px; color:#b9bbbe; margin-top:8px;">Volumen:</span>
+                    <input type="range" id="remoteVolume" min="0" max="1" step="0.05" value="1">
+                </div>
+            </div>
+
+            <!-- Panel Push To Talk -->
+            <div id="pttPanel" class="ptt-container" style="display:none;" onmousedown="pttIn()" onmouseup="pttOut()" onmouseleave="pttOut()">
+                <strong id="pttLabelText">👆 MANTÉN PULSADO O PRESIONA ESPACIO</strong>
+            </div>
+
+            <!-- Director Controls -->
+            <div id="directorPanel" style="display:none; width: 100%; margin-top: 20px;">
+                <button id="directorMuteBtn" class="danger" onclick="toggleDirectorMute()" style="margin-top: 0; background-color: #ca383a;">🔇 Silenciar a todos (Global)</button>
+            </div>
+
+            <button class="danger" onclick="leaveChannel()">Desconectar</button>
+        </div>
+    </div>
+
+    <script>
+        const SIGNALING_URL = "ws://localhost:8000/ws/";
+        const HTTP_URL = "http://localhost:8000";
+        
+        let ws = null;
+        let pc = null;
+        let localStream = null;
+        let checkStatsInterval = null;
+        
+        let myUsername = "Anónimo";
+        let myRole = { name: '', emoji: '' };
+        let currentVoiceMode = 'OPEN'; // OPEN o PTT
+        let isDirectorMuted = false;
+        let isGlobalMutedForOthers = false; // Solo para el Director
+
+        window.remoteAudioPlayer = null;
+
+        const joinView = document.getElementById("joinView");
+        const roleView = document.getElementById("roleView");
+        const channelView = document.getElementById("channelView");
+        const statusText = document.getElementById("statusText");
+        
+        const localAvatar = document.getElementById("localAvatar");
+        const remoteAvatar = document.getElementById("remoteAvatar");
+        const localNameLabel = document.getElementById("localNameLabel");
+        const remoteNameLabel = document.getElementById("remoteNameLabel");
+        
+        const localRoleBadge = document.getElementById("localRoleBadge");
+        const remoteRoleBadge = document.getElementById("remoteRoleBadge");
+        const remoteCard = document.getElementById("remoteCard");
+
+        // Volumen de compañero
+        document.getElementById("remoteVolume").oninput = (e) => {
+             if(window.remoteAudioPlayer) window.remoteAudioPlayer.volume = e.target.value;
+        };
+
+        // UI Modo
+        function setVoiceMode(mode) {
+            currentVoiceMode = mode;
+            document.getElementById("btnModeOpen").classList.toggle('active', mode === 'OPEN');
+            document.getElementById("btnModePTT").classList.toggle('active', mode === 'PTT');
+        }
+
+        async function fetchChannels() {
+            try {
+                const res = await fetch(`${HTTP_URL}/channels`);
+                const data = await res.json();
+                const list = document.getElementById("activeChannelsList");
+                list.innerHTML = "";
+                
+                if(data.channels.length === 0) {
+                    list.innerHTML = '<div style="color: #72767d; font-style: italic; font-size: 14px;">no hay salas activas en este momento</div>';
+                } else {
+                    data.channels.forEach(ch => {
+                        const btn = document.createElement("button");
+                        btn.style.backgroundColor = "#4f545c";
+                        btn.style.marginTop = "0";
+                        btn.style.padding = "10px";
+                        btn.innerText = `🔈 Entrar a #${ch}`;
+                        btn.onclick = () => {
+                            document.getElementById("channelInput").value = ch;
+                            goToRoleSelection();
+                        };
+                        list.appendChild(btn);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        fetchChannels();
+        setInterval(fetchChannels, 3000);
+
+        function showStatus(text, connected = false) {
+            statusText.innerText = text;
+            if(connected) statusText.classList.add("connected");
+            else statusText.classList.remove("connected");
+        }
+        
+        function goToRoleSelection() {
+            const channelId = document.getElementById("channelInput").value.trim();
+            myUsername = document.getElementById("usernameInput").value.trim();
+            if (!channelId || !myUsername) { alert("Debes ingresar tu nombre y la sala."); return; }
+            document.getElementById("roleViewRoom").innerText = channelId;
+            joinView.style.display = "none";
+            roleView.style.display = "flex";
+            showStatus("Selecciona tu Modo y Rol");
+        }
+        
+        function cancelJoin() {
+            roleView.style.display = "none";
+            joinView.style.display = "block";
+            showStatus("Desconectado");
+        }
+
+        let isSpeakingWebFallback = false;
+        async function setupWebRTC() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                if (currentVoiceMode === 'PTT') {
+                    localStream.getAudioTracks()[0].enabled = false;
+                }
+                
+                showStatus("Micrófono activado. Conectando...");
+                
+                const audioCtx = new AudioContext();
+                const analyser = audioCtx.createAnalyser();
+                const microphone = audioCtx.createMediaStreamSource(localStream);
+                microphone.connect(analyser); // Para graficos de VAD
+                analyser.fftSize = 512;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                setInterval(() => {
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for(let i = 0; i < bufferLength; i++) sum += dataArray[i];
+                    let average = sum / bufferLength;
+                    
+                    const nowSpeaking = average > 10;
+                    if(nowSpeaking !== isSpeakingWebFallback) {
+                        isSpeakingWebFallback = nowSpeaking;
+                        if(nowSpeaking) localAvatar.classList.add("speaking");
+                        else localAvatar.classList.remove("speaking");
+                        
+                        if(ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({ type: 'speaking', isSpeaking: nowSpeaking, name: myUsername }));
+                        }
+                    }
+                }, 100);
+
+            } catch (err) { alert("Permite el acceso al micrófono en tu navegador."); throw err; }
+        }
+
+        function createPeerConnection() {
+            const peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            if (localStream) localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+
+            peer.onicecandidate = (e) => {
+                if (e.candidate && ws) ws.send(JSON.stringify({ type: 'candidate', candidate: e.candidate, name: myUsername, role: myRole }));
+            };
+
+            peer.ontrack = (e) => {
+                window.remoteAudioPlayer = new Audio();
+                window.remoteAudioPlayer.srcObject = e.streams[0];
+                window.remoteAudioPlayer.autoplay = true;
+                window.remoteAudioPlayer.volume = document.getElementById("remoteVolume").value;
+                window.remoteAudioPlayer.play().catch(e => console.log('Autoplay requiere interacción', e));
+                
+                if(checkStatsInterval) clearInterval(checkStatsInterval);
+                checkStatsInterval = setInterval(async () => {
+                    if(!pc) return;
+                    const stats = await pc.getStats();
+                    let remoteSpeaking = false;
+                    stats.forEach(report => {
+                        if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+                            if (report.audioLevel > 0.02) remoteSpeaking = true;
+                        }
+                    });
+                    if(remoteSpeaking) remoteAvatar.classList.add("speaking");
+                    else remoteAvatar.classList.remove("speaking");
+                }, 200);
+            };
+
+            return peer;
+        }
+
+        async function connectToRoom(roleName, emoji) {
+            myRole = { name: roleName, emoji: emoji };
+            const channelId = document.getElementById("channelInput").value.trim();
+
+            try { await setupWebRTC(); } catch(e) { return; }
+
+            ws = new WebSocket(`${SIGNALING_URL}${channelId}/${myRole.name}`);
+            isDirectorMuted = false;
+            isGlobalMutedForOthers = false;
+
+            ws.onopen = async () => {
+                showStatus(`Conectado`, true);
+                
+                roleView.style.display = "none";
+                channelView.style.display = "flex";
+                document.getElementById("activeChannelName").innerText = "Sala: #" + channelId;
+                
+                localNameLabel.innerText = myUsername + " (Tú)";
+                localNameLabel.style.color = "white"; // Reset just in case
+                localAvatar.innerText = myUsername.charAt(0).toUpperCase();
+                localRoleBadge.innerText = `${myRole.emoji} ${myRole.name}`;
+                
+                if (myRole.name === 'Director') {
+                    document.getElementById('directorPanel').style.display = 'block';
+                    document.getElementById('directorMuteBtn').innerText = "🔇 Silenciar a todos (Global)";
+                    document.getElementById('directorMuteBtn').style.backgroundColor = "#ca383a";
+                } else {
+                    document.getElementById('directorPanel').style.display = 'none';
+                }
+
+                if (currentVoiceMode === 'PTT') {
+                    document.getElementById('pttPanel').style.display = 'block';
+                } else {
+                    document.getElementById('pttPanel').style.display = 'none';
+                }
+
+                pc = createPeerConnection();
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                ws.send(JSON.stringify({ type: 'offer', offer, name: myUsername, role: myRole }));
+            };
+
+            ws.onmessage = async (e) => {
+                const message = JSON.parse(e.data);
+                
+                if (message.type === 'error') {
+                    alert(message.message);
+                    leaveChannel();
+                    return;
+                }
+                
+                if (message.type === 'director_mute') {
+                    isDirectorMuted = message.muted;
+                    if (localStream) {
+                        const audioTrack = localStream.getAudioTracks()[0];
+                        if (audioTrack) {
+                            if (isDirectorMuted) {
+                                audioTrack.enabled = false;
+                                localNameLabel.innerText = myUsername + " (Mut. Director)";
+                                localNameLabel.style.color = "#ed4245";
+                                document.getElementById("pttLabelText").innerText = "MUTEADO POR EL DIRECTOR";
+                            } else {
+                                if (currentVoiceMode === 'OPEN') audioTrack.enabled = true;
+                                localNameLabel.innerText = myUsername + " (Tú)";
+                                localNameLabel.style.color = "white";
+                                document.getElementById("pttLabelText").innerText = "👆 MANTÉN PULSADO O PRESIONA ESPACIO";
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                if (!pc) return;
+
+                if (message.name && message.name !== myUsername) {
+                    remoteCard.style.display = 'flex';
+                    remoteNameLabel.innerText = message.name;
+                    remoteAvatar.innerText = message.name.charAt(0).toUpperCase();
+                    if(message.role) {
+                        remoteRoleBadge.style.display = 'block';
+                        remoteRoleBadge.innerText = `${message.role.emoji} ${message.role.name}`;
+                    }
+                }
+
+                if (message.type === 'offer') {
+                    await pc.setRemoteDescription(new RTCSessionDescription(message.offer));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    ws.send(JSON.stringify({ type: 'answer', answer, name: myUsername, role: myRole }));
+                } else if (message.type === 'answer') {
+                    await pc.setRemoteDescription(new RTCSessionDescription(message.answer));
+                } else if (message.type === 'candidate' && message.candidate) {
+                    await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+                } else if (message.type === 'speaking' && message.name !== myUsername) {
+                    if(message.isSpeaking) remoteAvatar.classList.add("speaking");
+                    else remoteAvatar.classList.remove("speaking");
+                }
+            };
+
+            ws.onerror = (e) => showStatus("Error de conexión al servidor");
+            ws.onclose = () => { if(channelView.style.display === "flex") leaveChannel(); };
+        }
+        
+        // --- LOGICA DE PUSH TO TALK Y MUTE GLOBAL ---
+
+        // Controles de Director
+        function toggleDirectorMute() {
+            isGlobalMutedForOthers = !isGlobalMutedForOthers;
+            if(ws) ws.send(JSON.stringify({type: 'director_mute', muted: isGlobalMutedForOthers}));
+            
+            const btn = document.getElementById("directorMuteBtn");
+            btn.innerText = isGlobalMutedForOthers ? "🔊 Desmutear a todos (Global)" : "🔇 Silenciar a todos (Global)";
+            btn.style.backgroundColor = isGlobalMutedForOthers ? "#43b581" : "#ca383a";
+        }
+
+        // Eventos PTT Mouse
+        function pttIn() {
+            if (isDirectorMuted || currentVoiceMode !== 'PTT' || !localStream) return;
+            localStream.getAudioTracks()[0].enabled = true;
+            document.getElementById('pttPanel').classList.add('active');
+        }
+
+        function pttOut() {
+            if (currentVoiceMode !== 'PTT' || !localStream) return;
+            localStream.getAudioTracks()[0].enabled = false;
+            document.getElementById('pttPanel').classList.remove('active');
+        }
+
+        // Eventos PTT Teclado (Barra Espaciadora)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat && channelView.style.display === "flex" && currentVoiceMode === 'PTT') {
+                e.preventDefault(); // Evita scroll
+                pttIn();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && channelView.style.display === "flex" && currentVoiceMode === 'PTT') {
+                e.preventDefault();
+                pttOut();
+            }
+        });
+
+        function leaveChannel() {
+            if (ws) ws.close();
+            if (pc) { pc.close(); pc = null; }
+            if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+            if (checkStatsInterval) { clearInterval(checkStatsInterval); checkStatsInterval = null; }
+            
+            showStatus("Desconectado");
+            channelView.style.display = "none";
+            roleView.style.display = "none";
+            joinView.style.display = "block";
+            remoteCard.style.display = "none";
+            remoteNameLabel.innerText = "Esperando...";
+            remoteAvatar.classList.remove("speaking");
+            localAvatar.classList.remove("speaking");
+            remoteRoleBadge.style.display = "none";
+            document.getElementById('directorPanel').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
