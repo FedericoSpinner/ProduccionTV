@@ -89,7 +89,14 @@ export default function VoiceChannelScreen() {
   };
 
   const createPeerConnection = (selectedRole: any) => {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const iceServers = [
+      { urls: 'stun:global.relay.metered.ca:80' },
+      { urls: 'turn:global.relay.metered.ca:80', username: '04efdbc91fad0ff00fae26fd', credential: '1ReZXsKtphudJhee' },
+      { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '04efdbc91fad0ff00fae26fd', credential: '1ReZXsKtphudJhee' },
+      { urls: 'turn:global.relay.metered.ca:443', username: '04efdbc91fad0ff00fae26fd', credential: '1ReZXsKtphudJhee' },
+      { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '04efdbc91fad0ff00fae26fd', credential: '1ReZXsKtphudJhee' }
+    ];
+    const pc = new RTCPeerConnection({ iceServers });
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => pc.addTrack(track, localStream.current!));
     }
