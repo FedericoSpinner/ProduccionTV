@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, mediaDevices, MediaStream } from 'react-native-webrtc';
+import notifee from '@notifee/react-native';
+import InCallManager from 'react-native-incall-manager';
 
 type AppStep = 'JOIN' | 'ROLE' | 'CONNECTED';
 type VoiceMode = 'OPEN' | 'PTT';
@@ -21,6 +23,36 @@ export default function VoiceChannelScreen() {
   
   const [localSpeaking, setLocalSpeaking] = useState(false);
   const [remoteSpeaking, setRemoteSpeaking] = useState(false);
+  const [isSpeaker, setIsSpeaker] = useState(true);
+
+  useEffect(() => {
+    if (step === 'CONNECTED') {
+      startForeground();
+    } else {
+      stopForeground();
+    }
+  }, [step]);
+
+  const startForeground = async () => {
+    try {
+      const channelId = await notifee.createChannel({ id: 'voice_call', name: 'Voice Call' });
+      await notifee.displayNotification({
+        title: 'Producción TV En Vivo',
+        body: 'Escuchando la frecuencia en segundo plano.',
+        android: { channelId, asForegroundService: true, ongoing: true },
+      });
+    } catch (e) {}
+  };
+
+  const stopForeground = async () => {
+    try { await notifee.stopForegroundService(); } catch (e) {}
+  };
+
+  const toggleSpeaker = () => {
+    const newMode = !isSpeaker;
+    setIsSpeaker(newMode);
+    InCallManager.setForceSpeakerphoneOn(newMode);
+  };
   
   const [isMutedByDirector, setIsMutedByDirector] = useState(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
@@ -219,6 +251,9 @@ export default function VoiceChannelScreen() {
   const toggleDirectorGlobalMute = () => {
       const nextState = !globalMuteActive;
       setGlobalMuteActive(nextState);
+      InCallManager.start({ media: 'audio' });
+      InCallManager.setForceSpeakerphoneOn(true);
+      setIsSpeaker(true);
       ws.current?.send(JSON.stringify({ type: 'director_mute', muted: nextState }));
   };
 
@@ -242,6 +277,7 @@ export default function VoiceChannelScreen() {
     if (localStream.current) { localStream.current.getTracks().forEach(t => t.stop()); localStream.current = null; }
     if (statsInterval.current) clearInterval(statsInterval.current);
     
+    InCallManager.stop();
     setStep('JOIN');
     setStatus('');
     setRemoteName('Esperando...');
@@ -379,6 +415,8 @@ const styles = StyleSheet.create({
   channelsList: { width: '100%', maxHeight: 150, marginBottom: 5 },
   noChannels: { color: '#72767d', fontStyle: 'italic', marginBottom: 10, fontSize: 15, textAlign: 'center' },
   channelButton: { backgroundColor: '#4f545c', padding: 14, borderRadius: 6, marginBottom: 8, width: '100%' },
+  speakerButton: { backgroundColor: '#4f545c', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
+  speakerButtonText: { color: '#fff', fontWeight: 'bold' },
   channelButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   input: { width: '100%', height: 55, backgroundColor: '#202225', borderRadius: 8, paddingHorizontal: 16, color: '#fff', fontSize: 18, marginBottom: 15 },
   button: { backgroundColor: '#5865F2', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 8, width: '100%', alignItems: 'center', marginTop: 10 },
