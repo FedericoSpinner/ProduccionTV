@@ -293,7 +293,8 @@ export default function VoiceChannelScreen() {
 
         {step === 'JOIN' && (
           <View style={styles.joinContainer}>
-            <TextInput style={styles.input} placeholder="Tu nombre" placeholderTextColor="#999" value={username} onChangeText={setUsername} />
+            <Text style={styles.subtitle}>NOMBRE USUARIO</Text>
+            <TextInput style={styles.input} placeholder="Nickname" placeholderTextColor="#999" value={username} onChangeText={setUsername} autoCapitalize="words" />
             
             <Text style={styles.subtitle}>SALAS ACTIVAS</Text>
             <ScrollView style={styles.channelsList}>
