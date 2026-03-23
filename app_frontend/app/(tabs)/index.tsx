@@ -270,7 +270,7 @@ export default function VoiceChannelScreen() {
               )}
             </ScrollView>
 
-            <Text style={styles.subtitle}>O CREA UNA NUEVA:</Text>
+            <Text style={styles.subtitle}>CREAR NUEVA SALA</Text>
             <TextInput style={styles.input} placeholder="Nombre de sala nueva" placeholderTextColor="#999" value={channelId} onChangeText={setChannelId} autoCapitalize="none" />
             <TouchableOpacity style={styles.button} onPress={handleStartCreation}>
               <Text style={styles.buttonText}>Crear y Unirse</Text>
