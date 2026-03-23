@@ -365,18 +365,18 @@ export default function VoiceChannelScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#36393f' },
   inner: { flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' },
-  logo: { width: '100%', height: 140, marginBottom: 10 },
+  logo: { width: '100%', height: 220, marginBottom: 0 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
-  status: { fontSize: 16, color: '#b9bbbe', marginBottom: 20, textAlign: 'center' },
-  joinContainer: { width: '100%', alignItems: 'center', flex: 1, justifyContent: 'center' },
-  subtitle: { color: '#b9bbbe', fontSize: 14, marginBottom: 8, alignSelf: 'flex-start', fontWeight: 'bold' },
+  status: { fontSize: 16, color: '#b9bbbe', marginBottom: 10, textAlign: 'center' },
+  joinContainer: { width: '100%', alignItems: 'center' },
+  subtitle: { color: '#b9bbbe', fontSize: 13, marginBottom: 6, alignSelf: 'flex-start', fontWeight: 'bold' },
   
   modeContainer: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', marginBottom: 20 },
   modeButton: { flex: 1, backgroundColor: '#2f3136', padding: 12, borderRadius: 8, alignItems: 'center', marginHorizontal: 5, borderWidth: 2, borderColor: '#2f3136' },
   modeActive: { borderColor: '#5865F2' },
   modeText: { color: '#fff', fontWeight: '600' },
 
-  channelsList: { width: '100%', maxHeight: 150, marginBottom: 15 },
+  channelsList: { width: '100%', maxHeight: 150, marginBottom: 5 },
   noChannels: { color: '#72767d', fontStyle: 'italic', marginBottom: 10, fontSize: 15, textAlign: 'center' },
   channelButton: { backgroundColor: '#4f545c', padding: 14, borderRadius: 6, marginBottom: 8, width: '100%' },
   channelButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
