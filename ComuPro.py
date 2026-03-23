@@ -72,6 +72,10 @@ from fastapi.responses import FileResponse
 def read_root():
     return FileResponse("cliente_web.html")
 
+@app.get("/logo.png")
+def read_logo():
+    return FileResponse("logo.png")
+
 @app.get("/channels")
 def get_channels():
     # Devuelve la lista de nombres de salas que tienen al menos 1 usuario

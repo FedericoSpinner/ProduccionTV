@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, mediaDevices, MediaStream } from 'react-native-webrtc';
 
 type AppStep = 'JOIN' | 'ROLE' | 'CONNECTED';
@@ -250,7 +250,7 @@ export default function VoiceChannelScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
-        <Text style={styles.title}>Voz Producción</Text>
+        <Image source={require('@/assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.status}>{status}</Text>
 
         {step === 'JOIN' && (
@@ -364,6 +364,7 @@ export default function VoiceChannelScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#36393f' },
   inner: { flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' },
+  logo: { width: '80%', height: 80, marginBottom: 15 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
   status: { fontSize: 16, color: '#b9bbbe', marginBottom: 20, textAlign: 'center' },
   joinContainer: { width: '100%', alignItems: 'center', flex: 1, justifyContent: 'center' },
