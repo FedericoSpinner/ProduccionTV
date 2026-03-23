@@ -66,9 +66,11 @@ async def websocket_endpoint(websocket: WebSocket, channel_id: str, role: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, channel_id)
 
+from fastapi.responses import FileResponse
+
 @app.get("/")
 def read_root():
-    return {"status": "El servidor de señalización de voz está corriendo."}
+    return FileResponse("cliente_web.html")
 
 @app.get("/channels")
 def get_channels():
