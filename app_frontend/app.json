@@ -41,7 +41,6 @@
     },
     "plugins": [
       "expo-router",
-      "@notifee/react-native",
       [
         "expo-splash-screen",
         {

@@ -179,6 +179,10 @@ export default function VoiceChannelScreen() {
       peerConnection.current = createPeerConnection(selectedRole);
       monitorSpeaking();
       
+      InCallManager.start({ media: 'audio' });
+      InCallManager.setForceSpeakerphoneOn(true);
+      setIsSpeaker(true);
+
       const offer = await peerConnection.current.createOffer({});
       await peerConnection.current.setLocalDescription(offer);
       ws.current?.send(JSON.stringify({ type: 'offer', offer, name: username, role: selectedRole }));
@@ -251,9 +255,6 @@ export default function VoiceChannelScreen() {
   const toggleDirectorGlobalMute = () => {
       const nextState = !globalMuteActive;
       setGlobalMuteActive(nextState);
-      InCallManager.start({ media: 'audio' });
-      InCallManager.setForceSpeakerphoneOn(true);
-      setIsSpeaker(true);
       ws.current?.send(JSON.stringify({ type: 'director_mute', muted: nextState }));
   };
 
