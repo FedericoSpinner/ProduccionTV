@@ -16,7 +16,7 @@ export default function VoiceChannelScreen() {
   const [remoteName, setRemoteName] = useState('Esperando...');
   const [remoteRole, setRemoteRole] = useState({ name: '', emoji: '' });
   
-  const [status, setStatus] = useState('Desconectado');
+  const [status, setStatus] = useState('');
   const [activeChannels, setActiveChannels] = useState<string[]>([]);
   
   const [localSpeaking, setLocalSpeaking] = useState(false);
@@ -243,6 +243,7 @@ export default function VoiceChannelScreen() {
     if (statsInterval.current) clearInterval(statsInterval.current);
     
     setStep('JOIN');
+    setStatus('');
     setRemoteName('Esperando...');
     setRemoteRole({ name: '', emoji: '' });
   };
@@ -364,7 +365,7 @@ export default function VoiceChannelScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#36393f' },
   inner: { flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' },
-  logo: { width: '80%', height: 80, marginBottom: 15 },
+  logo: { width: '100%', height: 140, marginBottom: 10 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
   status: { fontSize: 16, color: '#b9bbbe', marginBottom: 20, textAlign: 'center' },
   joinContainer: { width: '100%', alignItems: 'center', flex: 1, justifyContent: 'center' },
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
   modeText: { color: '#fff', fontWeight: '600' },
 
   channelsList: { width: '100%', maxHeight: 150, marginBottom: 15 },
-  noChannels: { color: '#72767d', fontStyle: 'italic', marginBottom: 10, fontSize: 15 },
+  noChannels: { color: '#72767d', fontStyle: 'italic', marginBottom: 10, fontSize: 15, textAlign: 'center' },
   channelButton: { backgroundColor: '#4f545c', padding: 14, borderRadius: 6, marginBottom: 8, width: '100%' },
   channelButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   input: { width: '100%', height: 55, backgroundColor: '#202225', borderRadius: 8, paddingHorizontal: 16, color: '#fff', fontSize: 18, marginBottom: 15 },

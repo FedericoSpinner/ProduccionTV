@@ -49,8 +49,8 @@
 <body>
 
     <div class="glass-panel">
-        <img src="logo.png" alt="Produccion TV" style="max-width: 100%; height: auto; max-height: 80px; margin-bottom: 10px;">
-        <div id="statusText" class="status">Desconectado</div>
+        <img src="logo.png" alt="Produccion TV" style="max-width: 100%; height: auto; max-height: 140px; margin-bottom: 20px;">
+        <div id="statusText" class="status"></div>
 
         <!-- Vista para Unirse -->
         <div id="joinView">
@@ -207,7 +207,7 @@
         function cancelJoin() {
             roleView.style.display = "none";
             joinView.style.display = "block";
-            showStatus("Desconectado");
+            showStatus("");
         }
 
         let isSpeakingWebFallback = false;
@@ -439,7 +439,7 @@
             if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
             if (checkStatsInterval) { clearInterval(checkStatsInterval); checkStatsInterval = null; }
             
-            showStatus("Desconectado");
+            showStatus("");
             channelView.style.display = "none";
             roleView.style.display = "none";
             joinView.style.display = "block";
