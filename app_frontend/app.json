@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "app_frontend",
-    "slug": "app_frontend",
+    "name": "Producción TV",
+    "slug": "produccion-tv",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -31,7 +31,7 @@
         "android.permission.WAKE_LOCK",
         "android.permission.BLUETOOTH"
       ],
-      "package": "com.anonymous.app_frontend"
+      "package": "tv.produccion.app"
     },
     "web": {
       "output": "static",
