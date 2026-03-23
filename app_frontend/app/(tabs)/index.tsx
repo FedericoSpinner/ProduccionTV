@@ -34,8 +34,8 @@ export default function VoiceChannelScreen() {
   const localStream = useRef<MediaStream | null>(null);
   const statsInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const SIGNALING_URL = `ws://10.0.2.2:8000/ws/`;
-  const HTTP_URL = `http://10.0.2.2:8000`;
+  const SIGNALING_URL = `wss://producciontv-server.onrender.com/ws/`;
+  const HTTP_URL = `https://producciontv-server.onrender.com`;
 
   const roles = [
     { name: 'Director', emoji: '🎬' },
